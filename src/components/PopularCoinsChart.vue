@@ -50,7 +50,7 @@ const chartOptions = {
   responsive: true,
   interaction: {
     mode: 'index',
-    intersect: false,
+    intersect: true,
   },
   plugins: {
     tooltip: {

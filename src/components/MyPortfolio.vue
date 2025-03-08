@@ -17,8 +17,8 @@ onMounted(fetchAllCoinsData);
 
 </script>
 <template>
-    <div  className="bg-[#1B2028] w-[400px] rounded-[10px] p-[20px] ml-[50px] h-[458px] pt-[30px]">
-        <h1 className="text-white font-bold">My Portfolio</h1>
+    <div  className="bg-[#1B2028] w-[400px] rounded-[10px] p-[20px] ml-[50px] h-[458px] pt-[30px] h-[636px]">
+        <h1 className="text-white font-bold text-2xl">My Portfolio</h1>
         <div v-for="coin in coinData" className="flex gap-[10px] pt-[20px] text-white ">
             <div>
                 <img :src="`/static/${coin.symbol.toLowerCase()}.png`">

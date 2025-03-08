@@ -11,7 +11,7 @@ import PopularCoinsChart from './PopularCoinsChart.vue';
     <div className="mt-[50px]">
         <CardsComponent/>
     </div>
-    <div class="flex gap-[20px] justify-center mt-[100px]">
+    <div class="flex flex-col lg:flex-row gap-[20px] justify-center mt-[100px]">
         <MyPortfolio/>
         <PopularCoinsChart/>
     </div>

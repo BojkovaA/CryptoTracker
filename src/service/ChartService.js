@@ -2,7 +2,6 @@ import axios from "axios";
 import API_KEY from "./key";
 
 
-// const API_KEY = "9f7ce968-32c9-464d-93cd-6665fc328fdf"; 
 
 class ChartService {
   static getChart(coin, period) {

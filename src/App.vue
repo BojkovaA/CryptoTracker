@@ -7,6 +7,6 @@ import NavbarComponent from './components/NavbarComponent.vue';
 <template>
   
   <NavbarComponent/>
-  <HomePageComponent className="mx-auto justify-center"/>
+  <HomePageComponent/>
   </template>
 

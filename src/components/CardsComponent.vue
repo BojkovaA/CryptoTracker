@@ -1,11 +1,10 @@
 <script setup>
 import 'vue3-carousel/carousel.css';
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeMount } from "vue";
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel';
 import CoinService from '../service/CoinService';
 
 const coinData = ref([]);
-const chartData = ref([]);
 
 const config = {
   height: 200,
@@ -17,6 +16,7 @@ const config = {
     1024: { itemsToShow: 3 },
     1280: { itemsToShow: 4 },
   },
+  wrapAround: true,
 };
 
 const fetchAllCoinsData = async () => {
@@ -31,24 +31,28 @@ const fetchAllCoinsData = async () => {
     
     console.log(cryptoCoins)
 
+    console.log(response.data.data);
+
    
 
    
 
     coinData.value = cryptoCoins
   } catch (error) {
-    console.error("Грешка при вчитување на податоците:", error);
+    console.error("Error fetching coins:", error);
   }
 };
 
+onBeforeMount(fetchAllCoinsData);
 
-onMounted(() => {
-  fetchAllCoinsData();
-});
+// onMounted(() => {
+//   fetchAllCoinsData();
+// });
 </script>
+
 <template>
 
-  <Carousel v-bind="config">
+  <Carousel v-bind="config" :loop="true" :navigation="true" :pagination="true">
     <Slide v-for="coin in coinData" :key="coin.symobl">
       <div class="bg-[#1B2028] w-[300px] rounded-[10px] p-[20px]">
         <div class="flex gap-[10px] items-center">
@@ -75,5 +79,6 @@ onMounted(() => {
       <Navigation />
       <Pagination />
     </template>
+    
   </Carousel>
 </template>
