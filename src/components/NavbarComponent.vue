@@ -6,7 +6,7 @@
             <div className="container mx-auto max-w-7xl flex justify-between items-center flex-col lg:flex-row gap-[10px]">
                 <div className="flex items-center gap-[10px]">
                     <img src="/src/static/logo2.png">
-                    <h1 className="font-bold text-lightGray">Crypto Tracker</h1>
+                    <router-link to="/" class="font-bold text-lightGray">Crypto Tracker</router-link>
                 </div>
 
                 
@@ -19,10 +19,10 @@
                    
                 <div className="flex items-center gap-[10px]">
                     <div className="flex items-center gap-[5px]">
-                        <button className="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Sign in</button>
+                        <router-link to="/login" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Sign in</router-link>
                     </div>
                     <div className="flex items-center gap-[5px]">
-                        <router-link to="/register" className="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Register</router-link>
+                        <router-link to="/register" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Register</router-link>
                     </div>
                 </div>
             </div>
