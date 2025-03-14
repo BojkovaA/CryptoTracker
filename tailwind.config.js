@@ -13,7 +13,8 @@ export default {
         'lightBlue': '#413E49',
         'textWhite': '#FFF',
         'textDark': '#292D32',
-        'lightGray': '#737373'
+        'lightGray': '#737373',
+        'logoBlue': '#406cfc'
       }
     },
   },

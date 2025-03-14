@@ -1,4 +1,6 @@
 <script setup>
+import { useRoute } from 'vue-router';
+const route = useRoute()
 </script>
 
 <template>
@@ -10,7 +12,7 @@
                 </div>
 
                 
-                <div className="bg-[#454151] rounded-[20px]">
+                <div v-if="route.path === '/'" class="bg-[#454151] rounded-[20px]">
                     <input type="text" placeholder="Search.." 
                     className="bg-transparent outline-none px-[30px] py-[15px] rounded-[20px] placeholder:text-mainYellow text-mainPurple"/>
                     <button className="bg-lightGray px-[30px] py-[15px] rounded-[20px] text-textWhite">Search</button>
@@ -18,13 +20,18 @@
 
                    
                 <div className="flex items-center gap-[10px]">
-                    <div className="flex items-center gap-[5px]">
+                    <div v-if="route.path === '/'" class="flex items-center gap-[5px]">
                         <router-link to="/login" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Sign in</router-link>
-                    </div>
-                    <div className="flex items-center gap-[5px]">
                         <router-link to="/register" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Register</router-link>
                     </div>
+                    <div v-else-if="route.path === '/login'" class="flex items-center gap-[5px]">
+                        <router-link to="/register" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Register</router-link>
+                    </div>
+                    <div v-else-if="route.path === '/register'" class="flex items-center gap-[5px]">
+                        <router-link to="/login" class="bg-lightGray text-textWhite px-[20px] py-[10px] rounded-[20px]">Sign in</router-link>
+                    </div>
                 </div>
+
             </div>
         </div>
 </template>
