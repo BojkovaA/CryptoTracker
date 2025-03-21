@@ -7,8 +7,8 @@ const route = useRoute()
     <div className=" h-full lg:h-[100px] flex items-center py-[10px] bg-[#1B2028]" >
             <div className="container mx-auto max-w-7xl flex justify-between items-center flex-col lg:flex-row gap-[10px]">
                 <div className="flex items-center gap-[10px]">
-                    <img src="/src/static/logo2.png">
-                    <router-link to="/" class="font-bold text-lightGray">Crypto Tracker</router-link>
+                    <img src="/src/static/logo2.png" class="w-11">
+                    <router-link to="/" class="font-bold text-lightGray text-2xl">Crypto Tracker</router-link>
                 </div>
 
                 

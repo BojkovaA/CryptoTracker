@@ -69,7 +69,8 @@ onBeforeMount(fetchAllCoinsData);
           </div>
           <div>
             <!-- <img :src="`/static/${coin.symbol.toLowerCase()}-vector.png`" class="w-22" /> -->
-            <img :src="`/static/btc-vector.png`" class="w-22" />
+            <!-- <img :src="`/static/btc-vector.png`" class="w-22" /> -->
+             <button class="bg-logoBlue text-textWhite px-[20px] py-[10px] rounded-lg font-bold hover:bg-opacity-90 transition">BUY</button>
           </div>
         </div>
       </div>
