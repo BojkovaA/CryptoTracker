@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from "vue";
 
-const step = ref(1); // Step 1: Enter email/username, Step 2: Enter password
+const step = ref(1);
 const form = ref({
   emailOrUsername: "",
   password: "",
@@ -31,7 +31,6 @@ const login = () => {
         Sign In to Your Account
       </h2>
 
-      <!-- Step 1: Email/Username Input -->
       <form v-if="step === 1" @submit.prevent="proceedToPassword" class="space-y-4">
         <div>
           <label class="text-textWhite block mb-1">Email or Username</label>
@@ -54,7 +53,6 @@ const login = () => {
         </button>
       </form>
 
-      <!-- Step 2: Password Input -->
       <form v-if="step === 2" @submit.prevent="login" class="space-y-4">
         <div>
           <label class="text-textWhite block mb-1">Password</label>
