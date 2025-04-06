@@ -6,6 +6,9 @@ import CoinService from '../service/CoinService';
 
 const coinData = ref([]);
 
+const coinData2 = ref([]);
+
+
 const config = {
   height: 200,
   itemsToShow: 4,
@@ -27,7 +30,7 @@ const fetchAllCoinsData = async () => {
 
     const response = await CoinService.getCoins(); 
     const cryptoCoins = response.data.data.filter((coin) => myCoins.includes(coin.symbol)); 
-    
+    const cryptoCoins2 = response.data.data.slice(0, 50);
     
     console.log(cryptoCoins)
 
@@ -38,6 +41,7 @@ const fetchAllCoinsData = async () => {
    
 
     coinData.value = cryptoCoins
+    coinData2.value = cryptoCoins2;
   } catch (error) {
     console.error("Error fetching coins:", error);
   }
@@ -53,7 +57,7 @@ onBeforeMount(fetchAllCoinsData);
 <template>
 
   <Carousel v-bind="config" :loop="true" :navigation="true" :pagination="true">
-    <Slide v-for="coin in coinData" :key="coin.symobl">
+    <Slide v-for="coin in coinData2" :key="coin.symobl">
       <div class="bg-[#1B2028] w-[300px] rounded-[10px] p-[20px]">
         <div class="flex gap-[10px] items-center">
           <img :src="`/static/${coin.symbol.toLowerCase()}.png`" alt="icon" class="w-12" />

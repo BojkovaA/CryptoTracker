@@ -39,5 +39,4 @@ const route = useRoute()
         <PopularCoinsChart/>
     </div>
     <LiveMarketComponent class="mt-[50px]"/>
-    <h1>HomePage</h1>
 </template>

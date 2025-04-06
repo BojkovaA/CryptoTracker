@@ -2,28 +2,15 @@
 import { onMounted, ref } from "vue";
 import CoinService from "../service/CoinService";
 import { useRouter } from "vue-router";
+import { useCoinsStore } from "../store/coinsStore";
 
 const isLoggedIn = ref(false);
 
-const coinData = ref([]);
 const isLoading = ref(true);
 const router = useRouter();
 
-const fetchAllCoinsData = async () => {
-  const myCoins = ["BTC", "DOGE", "ETH", "SOL", "LTC"];
-  try {
-    const response = await CoinService.getCoins();
-    coinData.value = response.data.data.filter((coin) =>
-      myCoins.includes(coin.symbol)
-    );
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  } finally {
-    isLoading.value = false;
-  }
-};
+const coindData = useCoinsStore()
 
-onMounted(fetchAllCoinsData);
 </script>
 
 <template>
@@ -49,13 +36,14 @@ onMounted(fetchAllCoinsData);
     </div>
 
     <div :class="{ 'blur-md': !isLoggedIn }" class="relative">
-      <div
-        v-for="coin in coinData"
+      <div class="max-h-[636px] overflow-y-scroll">
+        <div
+        v-for="coin in coindData.coinDataTop50"
         :key="coin.id"
         class="flex gap-[10px] pt-[20px] text-white"
       >
         <div>
-          <img :src="`/static/${coin.symbol.toLowerCase()}.png`" />
+          <img :src="`/static/${coin.symbol.toLowerCase()}.png`" class="w-12"/>
         </div>
         <div class="flex gap-[80px]">
           <div class="w-[75px]">
@@ -72,9 +60,10 @@ onMounted(fetchAllCoinsData);
             >
               {{ Number(coin.changePercent24Hr).toFixed(2) }}%
             </p>
-            <h3>0.12543 ETH</h3>
+            <h3>0.12543 {{ coin.symbol }}</h3>
           </div>
         </div>
+      </div>
       </div>
     </div>
   </div>

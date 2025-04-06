@@ -1,7 +1,13 @@
 <script setup>
-import HomePageComponent from './components/HomePageComponent.vue';
 import NavbarComponent from './components/NavbarComponent.vue';
-import router from './router';
+import { useCoinsStore } from './store/coinsStore'
+import { onMounted } from 'vue';
+
+
+const coinStore = useCoinsStore()
+onMounted(() => {
+  coinStore.fetchCoins()
+})
 
 </script>
 
