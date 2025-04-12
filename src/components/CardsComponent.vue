@@ -4,50 +4,50 @@ import { ref, onMounted, onBeforeMount } from "vue";
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel';
 import CoinService from '../service/CoinService';
 
-const coinData = ref([]);
+// const coinData = ref([]);
 
-const coinData2 = ref([]);
-
-
-const config = {
-  height: 200,
-  itemsToShow: 4,
-  gap: 5,
-  breakpoints: {
-    320: { itemsToShow: 1 },
-    768: { itemsToShow: 2 },
-    1024: { itemsToShow: 3 },
-    1280: { itemsToShow: 4 },
-  },
-  wrapAround: true,
-};
-
-const fetchAllCoinsData = async () => {
-  try {
-
-    const myCoins = ['BTC', 'DOGE', 'ETH', 'SOL', 'LTC'];
+// const coinData2 = ref([]);
 
 
-    const response = await CoinService.getCoins(); 
-    const cryptoCoins = response.data.data.filter((coin) => myCoins.includes(coin.symbol)); 
-    const cryptoCoins2 = response.data.data.slice(0, 50);
+// const config = {
+//   height: 200,
+//   itemsToShow: 4,
+//   gap: 5,
+//   breakpoints: {
+//     320: { itemsToShow: 1 },
+//     768: { itemsToShow: 2 },
+//     1024: { itemsToShow: 3 },
+//     1280: { itemsToShow: 4 },
+//   },
+//   wrapAround: true,
+// };
+
+// const fetchAllCoinsData = async () => {
+//   try {
+
+//     const myCoins = ['BTC', 'DOGE', 'ETH', 'SOL', 'LTC'];
+
+
+//     const response = await CoinService.getCoins(); 
+//     const cryptoCoins = response.data.data.filter((coin) => myCoins.includes(coin.symbol)); 
+//     const cryptoCoins2 = response.data.data.slice(0, 50);
     
-    console.log(cryptoCoins)
+//     console.log(cryptoCoins)
 
-    console.log(response.data.data);
-
-   
+//     console.log(response.data.data);
 
    
 
-    coinData.value = cryptoCoins
-    coinData2.value = cryptoCoins2;
-  } catch (error) {
-    console.error("Error fetching coins:", error);
-  }
-};
+   
 
-onBeforeMount(fetchAllCoinsData);
+//     coinData.value = cryptoCoins
+//     coinData2.value = cryptoCoins2;
+//   } catch (error) {
+//     console.error("Error fetching coins:", error);
+//   }
+// };
+
+// onBeforeMount(fetchAllCoinsData);
 
 // onMounted(() => {
 //   fetchAllCoinsData();

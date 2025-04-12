@@ -23,11 +23,11 @@ const config = {
 const fetchAllCoinsData = async () => {
   try {
     const allData = await Promise.all(
-      coins.value.map(async (coin) => {
-        const response = await ChartService.getChart(coin);
+      coins.value.map(async (coin.id) => {
+        const response = await ChartService.getChart(coin.id);
         const latestEntry = response.data[response.data.length - 1];
         return {
-          name: coin,
+          name: coin.id,
           price: `$${latestEntry.rate_close.toFixed(2)}`,
           change: calculateChange(response.data),
         };
@@ -52,19 +52,19 @@ onMounted(fetchAllCoinsData);
 
 <template>
   <Carousel v-bind="config">
-    <Slide v-for="coin in coinData" :key="coin.name">
+    <Slide v-for="coin.id in coinData" :key="coin.id.name">
       <div class="bg-[#1B2028] w-[300px] rounded-[10px] p-[20px]">
         <div class="flex gap-[10px] items-center">
-          <img :src="`/static/${coin.name.toLowerCase()}.png`" alt="icon" class="w-12" />
-            <h1>{{ coin.name.toLowerCase() }}</h1>
+          <img :src="`/static/${coin.id.name.toLowerCase()}.png`" alt="icon" class="w-12" />
+            <h1>{{ coin.id.name.toLowerCase() }}</h1>
           <div>
-            <h3 class="font-bold text-white">{{ coin.name }}</h3>
-            <span class="text-white">{{ coin.name }}</span>
+            <h3 class="font-bold text-white">{{ coin.id.name }}</h3>
+            <span class="text-white">{{ coin.id.name }}</span>
           </div>
         </div>
         <div class="flex justify-between items-center pt-[30px]">
-          <h3 :class="coin.change.includes('+') ? 'text-[#1ECB4F]' : 'text-[#FF4D4D]'">
-            {{ coin.change }}
+          <h3 :class="coin.id.change.includes('+') ? 'text-[#1ECB4F]' : 'text-[#FF4D4D]'">
+            {{ coin.id.change }}
           </h3>
           <img src="/src/static/btc-vector.png" class="w-12"/>
         </div>

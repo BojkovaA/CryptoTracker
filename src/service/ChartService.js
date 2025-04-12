@@ -1,40 +1,41 @@
 import axios from "axios";
 import API_KEY from "./key";
 
-
-
 class ChartService {
   static getChart(coin, period) {
-    let periodId;
+    let interval;
     let startDate;
 
-    // Set the period_id and calculate the start date based on the selected period
+    // Set the interval and start date based on the selected period
     switch (period) {
       case "1DAY":
-        periodId = "1HRS"; 
-        startDate = new Date(new Date().setDate(new Date().getDate() - 1)); // 24 hours
+        interval = "h1"; // 1 hour intervals
+        startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
         break;
       case "7DAY":
-        periodId = "12HRS"; 
-        startDate = new Date(new Date().setDate(new Date().getDate() - 7)); // 7 days
+        interval = "h12";
+        startDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         break;
       case "1MTH":
-        periodId = "1HRS"; 
-        startDate = new Date(new Date().setDate(new Date().getDate() - 30)); // 7 days
+        interval = "h1";
+        startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         break;
       default:
-        periodId = "1DAY";
-        startDate = new Date(new Date().setDate(new Date().getDate() - 1)); // Default to 1DAY
+        interval = "h1";
+        startDate = new Date(Date.now() - 24 * 60 * 60 * 1000);
     }
 
-    return axios.get(`https://rest.coinapi.io/v1/exchangerate/${coin}/USD/history`, {
+    const endDate = new Date();
+
+    return axios.get(`https://rest.coincap.io/v3/assets/${coin}/history`, {
       params: {
-        period_id: periodId,
-        time_start: startDate.toISOString(),
-        time_end: new Date().toISOString(),
+        interval,
+        start: startDate.getTime(),
+        end: endDate.getTime(),
       },
       headers: {
-        "X-CoinAPI-Key": API_KEY,
+        Accept: "application/json",
+        Authorization: `Bearer ${API_KEY}`,
       },
     });
   }

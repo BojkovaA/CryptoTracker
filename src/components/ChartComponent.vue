@@ -61,7 +61,7 @@ const chartOptions = {
 };
 
 
-// Fetch chart data based on the selected coin and period
+// Fetch chart data based on the selected coin.id and period
 const fetchChartData = async () => {
   try {
     const response = await ChartService.getChart(selectedCoin.value, selectedCoinData.value);
