@@ -25,3 +25,4 @@ dist-ssr
 
 # Ignore key.js file
 src/service/key.js
+src/firebase/firebase.js

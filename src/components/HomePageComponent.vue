@@ -5,16 +5,35 @@ import CoinCardsComponent from './CoinCardsComponent.vue';
 import LiveMarketComponent from './LiveMarketComponent.vue';
 import MyPortfolio from './MyPortfolio.vue';
 import PopularCoinsChart from './PopularCoinsChart.vue';
-
+import {ref, onMounted} from 'vue'
 import { useRoute } from 'vue-router';
+import {auth} from '../firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+
+
 const route = useRoute()
+const isLoggedIn = ref(false);
+
+const isLoading = ref(true);
+
+onMounted(() =>{
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            isLoggedIn.value = true;
+            }
+        else {
+            isLoggedIn.value = false;
+        }
+        isLoading.value = false;
+    })
+})
 
 </script>
 
 <template>
 
-    <div class="mt-[20px] text-center  w-[700px] mx-auto p-[30px] rounded-[10px] relative overflow-hidden">
-        <div class="absolute inset-0 rounded-[10px]"
+<div v-if="!isLoading && !isLoggedIn" class="mt-[20px] text-center w-[700px] mx-auto p-[30px] rounded-[10px] relative overflow-hidden">
+    <div class="absolute inset-0 rounded-[10px]"
              style="background: linear-gradient(90deg, rgba(27,32,40,0) 0%, 
       rgba(27,32,40,1) 40%, 
       rgba(27,32,40,1) 60%, 

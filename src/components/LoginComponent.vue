@@ -1,5 +1,15 @@
 <script setup>
 import { ref } from "vue";
+import { loginUser } from "../service/authService";
+import { useRouter } from 'vue-router';
+import { auth, db } from "../firebase/firebase"; 
+import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth'; // Firebase funkcija za anoniman login
+import { getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
+import { updateProfile } from "firebase/auth";
+
+
+const router = useRouter();
 
 const step = ref(1);
 const form = ref({
@@ -8,6 +18,7 @@ const form = ref({
 });
 
 const isValidInput = ref(false);
+const error = ref("");
 
 const validateInput = () => {
   isValidInput.value = form.value.emailOrUsername.trim().length > 0;
@@ -19,9 +30,67 @@ const proceedToPassword = () => {
   }
 };
 
-const login = () => {
-  console.log("Logging in with:", form.value);
+
+const currentUser = ref(null);
+
+// const login = async () => {
+//   try {
+//     const userCredential = await signInAnonymously(auth);
+    
+//     currentUser.value = userCredential.user;
+
+//     router.push("/"); 
+//   } catch (error) {
+//     error.value = error.message;  
+//   }
+// };
+
+
+
+const login = async () => {
+  try {
+    let emailToUse = form.value.emailOrUsername;
+
+    // Ако внесеното НЕ е валиден email -> претпоставуваме дека е username
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailToUse)) {
+      // Пребарај го email-от од Firestore со username
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", form.value.emailOrUsername));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        throw new Error("No user found with this username.");
+      }
+
+      // Земи го првиот резултат (бидејќи username треба да е уникатен)
+      emailToUse = querySnapshot.docs[0].data().email;
+    }
+
+    // Користи го emailToUse за логирање
+    const userCredential = await signInWithEmailAndPassword(auth, emailToUse, form.value.password);
+    const user = userCredential.user;
+
+    // Превземи го displayName од Firestore
+    const docRef = doc(db, 'users', user.uid);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const userData = docSnap.data();
+      await updateProfile(user, {
+        displayName: userData.username,
+      });
+    }
+
+    router.push('/');
+  } catch (error) {
+    console.error('Error during login:', error);
+    error.value = error.message;
+  }
 };
+
+
+
 </script>
 
 <template>
@@ -73,4 +142,5 @@ const login = () => {
       </form>
     </div>
   </div>
+  <p v-if="error" class="text-red-500">{{ error }}</p>
 </template>

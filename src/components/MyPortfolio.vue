@@ -3,6 +3,8 @@ import { onMounted, ref } from "vue";
 import CoinService from "../service/CoinService";
 import { useRouter } from "vue-router";
 import { useCoinsStore } from "../store/coinsStore";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase/firebase";
 
 const isLoggedIn = ref(false);
 
@@ -11,6 +13,17 @@ const router = useRouter();
 
 const coindData = useCoinsStore()
 
+onMounted(() =>{
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      isLoggedIn.value = true;
+      }
+    else {
+      isLoggedIn.value = false;
+    }
+    isLoading.value = false;
+  })
+})
 </script>
 
 <template>

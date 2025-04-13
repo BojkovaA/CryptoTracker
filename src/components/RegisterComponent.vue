@@ -1,5 +1,11 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import { auth, db } from "../firebase/firebase";
+import { createUserWithEmailAndPassword, signInAnonymously, updateProfile, signOut } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const step = ref(1);
 const form = ref({
@@ -12,10 +18,11 @@ const form = ref({
 
 const errors = ref({
   passwordMismatch: false,
+  firebaseError: "",
 });
 
 const isEmailValid = ref(false);
-
+const currentUser = ref(null);
 const validateEmail = () => {
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   isEmailValid.value = emailPattern.test(form.value.email);
@@ -27,13 +34,59 @@ const proceedToNextStep = () => {
   }
 };
 
-const register = () => {
+const register = async () => {
   errors.value.passwordMismatch = form.value.password !== form.value.confirmPassword;
+  errors.value.firebaseError = "";
 
-  if (!errors.value.passwordMismatch) {
-    console.log("Registering with:", form.value);
+  if (errors.value.passwordMismatch) return;
+
+  try {
+    // 1. Создај го корисникот анонимно во Firebase Auth
+    //const userCredential = await signInAnonymously(auth);
+    const userCredential = await createUserWithEmailAndPassword(auth, form.value.email,
+    form.value.password);
+
+
+    // 2. Опционално, ажурирај го display name (например, username)
+    await updateProfile(userCredential.user, {
+      displayName: form.value.username,
+    });
+
+    // 3. Запиши дополнителни податоци во Firestore
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      fullName: form.value.fullName,
+      username: form.value.username,
+      email: form.value.email,
+      //password: form.value.password,  // If you need to store the password, but be aware of security risks
+    });
+
+    // 4. Логирај го корисникот
+    currentUser.value = userCredential.user; // Ажурирај го `currentUser`
+
+    // 5. Пренасочи на dashboard или домашна страница
+    router.push("/"); // Може да биде домашна страница
+
+  } catch (error) {
+    errors.value.firebaseError = error.message;
+    console.error("Firebase Error:", error);
   }
 };
+
+const logout = async () => {
+  try {
+    await signOut(auth);
+    currentUser.value = null; // Исчисти го корисникот
+    router.push("/"); // Пренасочи на почетната страница
+  } catch (error) {
+    console.error("Error during sign-out:", error);
+  }
+};
+
+onMounted(() => {
+  auth.onAuthStateChanged((user) => {
+    currentUser.value = user; // Ажурирај го `currentUser` ако е логиран
+  });
+});
 </script>
 
 <template>
@@ -64,7 +117,7 @@ const register = () => {
           Continue
         </button>
       </form>
-
+      <p class="text-textWhite text-center mt-4">Already has an account? <router-link to="/login" class="text-logoBlue hover:underline">Sign in</router-link></p>
       <form v-if="step === 2" @submit.prevent="register" class="space-y-4">
         <div>
           <label class="text-textWhite block mb-1">Full Name</label>
