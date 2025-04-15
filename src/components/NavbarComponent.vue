@@ -1,12 +1,18 @@
 <script setup>
 import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { auth, db } from '../firebase/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
+import { useCoinsStore } from '../store/coinsStore';
+import { useRouter } from 'vue-router';
+
 const route = useRoute();
 const user = ref(null);
 const userData = ref({ balance: 0 });
+const coins = useCoinsStore();
+const searchQuery = ref("");
+const router = useRouter();
 
 onMounted(() => {
     onAuthStateChanged(auth, async(firebaseUser) => {
@@ -24,6 +30,11 @@ onMounted(() => {
   });
 });
 
+const  filteredCoins = computed(()=>{
+  if(!searchQuery.value) return [];
+  return coins.coinDataTop50.filter(coin => coin.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || coin.symbol.toLowerCase().includes(searchQuery.value.toLowerCase()))
+})
+
 const logout = async() => {
     try {
     await auth.signOut(); 
@@ -32,6 +43,11 @@ const logout = async() => {
     console.error("Error logouting:", error);
   }
 };
+
+const goToCoin = (coinName) =>{
+  searchQuery.value = "";
+  router.push(`/invest/${coinName}`);
+}
 </script>
 
 <template>
@@ -46,14 +62,24 @@ const logout = async() => {
   
         <!-- Search bar -->
         <div v-if="route.path === '/'" class="bg-[#454151] rounded-[20px]">
-          <input
+          <input id="myInput" v-model="searchQuery"
             type="text"
             placeholder="Search.."
-            className="bg-transparent outline-none px-[30px] py-[15px] rounded-[20px] placeholder:text-mainYellow text-mainPurple"
+            className="bg-transparent outline-none px-[30px] py-[15px] rounded-[20px] placeholder:text-mainYellow text-white"
           />
           <button className="bg-lightGray px-[30px] py-[15px] rounded-[20px] text-textWhite">
             Search
           </button>
+
+          <ul v-if="searchQuery && filteredCoins.length"
+          class="absolute z-50 top-[60px] w-150 bg-[#2c2f36] rounded-[10px] border border-[#555] mt-1"          >
+            <li v-for="coin in filteredCoins" :key="coin.id" class="px-4 py-2 text-white hover:bg-[#3a3d44] cursor-pointer"
+            @click="goToCoin(coin.name)"
+            >
+              {{ coin.name }} ({{ coin.symbol.toUpperCase() }})
+
+            </li>
+          </ul>
         </div>
   
         <!-- Right section -->
