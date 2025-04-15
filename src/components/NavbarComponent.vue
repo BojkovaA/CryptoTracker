@@ -13,6 +13,7 @@ const userData = ref({ balance: 0 });
 const coins = useCoinsStore();
 const searchQuery = ref("");
 const router = useRouter();
+const searchInput = ref(null);
 
 onMounted(() => {
     onAuthStateChanged(auth, async(firebaseUser) => {
@@ -48,6 +49,10 @@ const goToCoin = (coinName) =>{
   searchQuery.value = "";
   router.push(`/invest/${coinName}`);
 }
+
+defineExpose({
+  searchInput
+})
 </script>
 
 <template>
@@ -65,6 +70,7 @@ const goToCoin = (coinName) =>{
           <input id="myInput" v-model="searchQuery"
             type="text"
             placeholder="Search.."
+            ref="searchInput"
             className="bg-transparent outline-none px-[30px] py-[15px] rounded-[20px] placeholder:text-mainYellow text-white"
           />
           <button className="bg-lightGray px-[30px] py-[15px] rounded-[20px] text-textWhite">

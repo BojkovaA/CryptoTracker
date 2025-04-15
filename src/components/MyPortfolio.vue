@@ -4,7 +4,9 @@ import CoinService from "../service/CoinService";
 import { useRouter } from "vue-router";
 import { useCoinsStore } from "../store/coinsStore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../firebase/firebase";
+import { auth, db } from "../firebase/firebase";
+import { collection, getDocs } from "firebase/firestore";
+import firebase from "firebase/compat/app";
 
 const isLoggedIn = ref(false);
 
@@ -13,10 +15,21 @@ const router = useRouter();
 
 const coindData = useCoinsStore()
 
+const userCoins = ref([])
+
 onMounted(() =>{
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     if (user) {
       isLoggedIn.value = true;
+      const coinsCollectionRef = collection(db, 'users', user.uid, 'cryptoCoins');
+      const coinsSnapshot = await getDocs(coinsCollectionRef)
+
+      userCoins.value = coinsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }))
+
+      console.log("User's coins: ", userCoins.value)
       }
     else {
       isLoggedIn.value = false;
@@ -24,6 +37,26 @@ onMounted(() =>{
     isLoading.value = false;
   })
 })
+
+const scrollToSearch = () => {
+  const input = document.getElementById('myInput');
+  if (input) {
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input.focus();
+  } else {
+    // Ако search bar не е на оваа страница, прво направи навигација
+    router.push('/').then(() => {
+      setTimeout(() => {
+        const input = document.getElementById('myInput');
+        if (input) {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          input.focus();
+        }
+      }, 300); // чека малку за да се вчита компонентата
+    });
+  }
+};
+
 </script>
 
 <template>
@@ -49,34 +82,26 @@ onMounted(() =>{
     </div>
 
     <div :class="{ 'blur-md': !isLoggedIn }" class="relative">
-      <div class="max-h-[636px] overflow-y-scroll">
+      <div v-if="userCoins.length ===0 " class="text-center mt-[210px]">
+        <p class="text-lg font-semibold text-white">Invest in Coins <a @click="scrollToSearch"
+          class="text-lg font-semibold text-logoBlue underline hover:text-logoBlue transition">now</a>!</p>
+      </div>
+      <div v-else class="max-h-[636px] overflow-y-scroll">
         <div
-        v-for="coin in coindData.coinDataTop50"
+        v-for="coin in userCoins"
         :key="coin.id"
-        class="flex gap-[10px] pt-[20px] text-white"
-      >
+        class="flex gap-[10px] pt-[20px] text-white">
         <div>
           <img :src="`/static/${coin.symbol.toLowerCase()}.png`" class="w-12"/>
         </div>
         <div class="flex gap-[80px]">
           <div class="w-[75px]">
-            <h1>{{ coin.name }}</h1>
-            <h3 class="text-[#454151]">{{ Number(coin.priceUsd).toFixed(2) }}</h3>
+            <h1>{{ coin.coinName }}</h1>
+            <h3 class="text-[#454151]">{{ Number(coin.valueUsd).toFixed(2) }}</h3>
           </div>
-          <div class="flex flex-col">
-            <p
-              :class="
-                coin.changePercent24Hr < 0
-                  ? 'font-bold text-red-500'
-                  : 'font-bold text-[#1ECB4F]'
-              "
-            >
-              {{ Number(coin.changePercent24Hr).toFixed(2) }}%
-            </p>
-            <h3>0.12543 {{ coin.symbol }}</h3>
+            <h3>{{coin.amountOwned}} {{ coin.symbol }}</h3>
           </div>
         </div>
-      </div>
       </div>
     </div>
   </div>

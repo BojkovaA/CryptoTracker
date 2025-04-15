@@ -95,6 +95,7 @@ const updatePortfolio = async () => {
 
     <div v-else class="text-white text-center">
       Please log in to view your portfolio.
+      <router-link to="/register" class="text-logoBlue underline">Sing Up</router-link>
     </div>
   </div>
 
