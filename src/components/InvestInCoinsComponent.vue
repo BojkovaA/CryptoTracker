@@ -136,7 +136,7 @@ const startCountdown = () => {
 // Function to close the countdown modal manually
 const closeCountdownModal = () => {
   countdownActive.value = false
-  showCountdownModal.value = 
+  showCountdownModal.value = false
   successMessage.value = ""
 }
 
@@ -190,6 +190,8 @@ watch([inputValue, buyMode], () => {
 })
 
 const confirmBuy = async () => {
+  showBuyModal.value = false
+
   const user = auth.currentUser
   const price = parseFloat(coin.priceUsd)
   const input = parseFloat(inputValue.value)

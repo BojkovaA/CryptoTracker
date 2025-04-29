@@ -97,9 +97,9 @@ const scrollToSearch = () => {
         <div class="flex gap-[80px]">
           <div class="w-[75px]">
             <h1>{{ coin.coinName }}</h1>
-            <h3 class="text-[#454151]">{{ Number(coin.valueUsd).toFixed(2) }}</h3>
+            <h3 class="text-[#454151]">${{ Number(coin.valueUsd).toFixed(3) }}</h3>
           </div>
-            <h3>{{coin.amountOwned}} {{ coin.symbol }}</h3>
+            <h3>{{Number(coin.amountOwned).toFixed(4)}} {{ coin.symbol }}</h3>
           </div>
         </div>
       </div>

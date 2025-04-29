@@ -21,7 +21,7 @@ const coinStore = useCoinsStore();
             <p  :class="(coin.changePercent24Hr) < 0 ? 'font-bold text-red-500' : 'font-bold text-[#1ECB4F]'">{{ Number(coin.changePercent24Hr).toFixed(2)}}%</p>
             <p>${{ Number(coin.marketCapUsd).toFixed(0) }}M</p>
             <p>${{ Number(coin.volumeUsd24Hr).toFixed(0)}}M</p>
-            <p>${{ Number(coin.priceUsd).toFixed(0) }}</p>
+            <p>${{ Number(coin.priceUsd).toFixed(4) }}</p>
         </div>
         </div>
 
