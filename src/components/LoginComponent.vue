@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { loginUser } from "../service/authService";
 import { useRouter } from 'vue-router';
 import { auth, db } from "../firebase/firebase"; 
-import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth'; // Firebase funkcija za anoniman login
+import { signInAnonymously, signInWithEmailAndPassword } from 'firebase/auth';
 import { getDocs, doc, getDoc } from "firebase/firestore";
 import { collection, query, where } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";

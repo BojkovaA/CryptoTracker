@@ -3,7 +3,7 @@ import { useRoute } from 'vue-router';
 import { ref, onMounted, computed } from 'vue';
 import { auth, db } from '../firebase/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { onSnapshot, doc, getDoc } from 'firebase/firestore';
 import { useCoinsStore } from '../store/coinsStore';
 import { useRouter } from 'vue-router';
 
@@ -17,17 +17,19 @@ const searchInput = ref(null);
 
 onMounted(() => {
     onAuthStateChanged(auth, async(firebaseUser) => {
-    if (firebaseUser) {
-      user.value = firebaseUser; 
-      const userDocRef = doc(db, "users", firebaseUser.uid);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
-        userData.value = userDocSnap.data();
+      if (firebaseUser) {
+          user.value = firebaseUser; 
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+          
+          onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    userData.value = docSnap.data();
+                }
+            });
+      } else {
+          user.value = null;
+          userData.value = { balance: 0 };
       }
-    } else {
-      user.value = null;
-      userData.value = { balance: 0 };
-    }
   });
 });
 

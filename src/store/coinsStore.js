@@ -2,7 +2,7 @@ import {defineStore} from 'pinia'
 import { ref } from 'vue'
 import CoinService from '../service/CoinService'
 
-export const useCoinsStore = defineStore('coin.id', ()=>{
+export const useCoinsStore = defineStore('coin', ()=>{
     
     const coinDataTop50 = ref([])
 

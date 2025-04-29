@@ -5,3 +5,16 @@
 body{
   background-color: theme('colors.lightBlue');
 }
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #2c333c; 
+  border-radius: 999px; 
+}
+
+::-webkit-scrollbar-track {
+  background: #161a20; 
+}

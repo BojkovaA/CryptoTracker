@@ -157,18 +157,18 @@ onMounted(() => {
 
         <h3 class="text-lg font-bold mt-6 mb-2">Transaction History</h3>
         <div v-if="transactions.length" class="space-y-2 max-h-[200px] overflow-y-auto">
-            <div
-            v-for="tx in transactions"
-            :key="tx.timestamp"
-            class="text-sm bg-[#2A2F3A] p-2 rounded-lg flex justify-between items-center"
-            >
-            <div>
-                <span class="text-[#1ECB4F] font-bold">+${{ tx.amount }}</span>
+            <div v-for="tx in transactions" :key="tx.timestamp" class="text-sm bg-[#2A2F3A] p-2 rounded-lg flex justify-between items-center">
+              <div>
+                <span :class="{ 'text-[#1ECB4F]': tx.type === 'Sell', 'text-[#e11d48]': tx.type === 'Buy', 'text-[#B0F5A5]': tx.type === 'Add Funds'}" class="font-bold">
+                  <span class="inline-block w-20 text-right">
+                    {{ tx.type === 'Buy' ? `-$${Math.abs(tx.amount).toFixed(2)}` : `+$${Math.abs(tx.amount).toFixed(2)}` }}
+                  </span>
+                  </span>
                 <span class="text-gray-400"> - {{ new Date(tx.timestamp).toLocaleString() }}</span>
-            </div>
-            <span class="text-gray-300 text-right whitespace-nowrap ml-4">
+              </div>
+              <span class="text-gray-300 text-right whitespace-nowrap ml-4">
                 {{ tx.description }}
-            </span>
+              </span>
             </div>
         </div>
         <p v-else class="text-gray-400">No transactions yet.</p>

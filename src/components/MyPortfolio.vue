@@ -60,45 +60,35 @@ const scrollToSearch = () => {
 </script>
 
 <template>
-  <div
-    class="relative bg-[#1B2028] w-[400px] rounded-[10px] p-[20px] ml-[50px] h-[636px] pt-[30px] overflow-hidden">
-
+  <div class="relative bg-[#1B2028] w-[400px] rounded-[10px] p-[20px] ml-[50px] h-[636px] pt-[30px] overflow-hidden">
     <h1 class="text-white font-bold text-2xl">My Portfolio</h1>
 
     <div v-if="!isLoggedIn" class="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center z-10">
       <p class="text-lg font-semibold text-white">
         <router-link to="/login" class="text-logoBlue font-bold text-xl hover:underline">
         Sign in
-      </router-link>
-         to access your portfolio.</p>
-      
+      </router-link> to access your portfolio.
+      </p>
       <p class="text-sm text-gray-400 mt-2">
-        or
-        <router-link to="/register" class="text-logoBlue hover:underline">
-          register
-        </router-link>
-        to get your own.
+        or <router-link to="/register" class="text-logoBlue hover:underline">register</router-link> to get your own.
       </p>
     </div>
 
     <div :class="{ 'blur-md': !isLoggedIn }" class="relative">
-      <div v-if="userCoins.length ===0 " class="text-center mt-[210px]">
-        <p class="text-lg font-semibold text-white">Invest in Coins <a @click="scrollToSearch"
-          class="text-lg font-semibold text-logoBlue underline hover:text-logoBlue transition">now</a>!</p>
+      <div v-if="userCoins.length === 0" class="text-center mt-[210px]">
+        <p class="text-lg font-semibold text-white">Invest in Coins <a @click="scrollToSearch" class="text-lg font-semibold text-logoBlue underline hover:text-logoBlue transition">now</a>!</p>
       </div>
-      <div v-else class="max-h-[636px] overflow-y-scroll">
-        <div
-        v-for="coin in userCoins"
-        :key="coin.id"
-        class="flex gap-[10px] pt-[20px] text-white">
-        <div>
-          <img :src="`/static/${coin.symbol.toLowerCase()}.png`" class="w-12"/>
-        </div>
-        <div class="flex gap-[80px]">
-          <div class="w-[75px]">
-            <h1>{{ coin.coinName }}</h1>
-            <h3 class="text-[#454151]">${{ Number(coin.valueUsd).toFixed(3) }}</h3>
+
+      <div v-else class="max-h-[636px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
+        <div v-for="coin in userCoins" :key="coin.id" class="flex gap-[10px] pt-[20px] text-white hover:bg-gray-700 rounded-lg transition-all">
+          <div>
+            <img :src="`/static/${coin.symbol.toLowerCase()}.png`" class="w-12"/>
           </div>
+          <div class="flex gap-[80px]">
+            <div class="w-[75px]">
+              <h1>{{ coin.coinName }}</h1>
+              <h3 class="text-[#454151]">${{ Number(coin.valueUsd).toFixed(3) }}</h3>
+            </div>
             <h3>{{Number(coin.amountOwned).toFixed(4)}} {{ coin.symbol }}</h3>
           </div>
         </div>

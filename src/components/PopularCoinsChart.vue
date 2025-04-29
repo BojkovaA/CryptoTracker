@@ -38,7 +38,7 @@ const chartOptions = {
       intersect: true,
       callbacks: {
         label: function (context) {
-          return `Price: $${context.parsed.y.toFixed(2)}`;
+          return `Price: $${context.parsed.y.toFixed(4)}`;
         },
       },
     },

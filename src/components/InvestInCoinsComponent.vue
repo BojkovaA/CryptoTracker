@@ -1,12 +1,12 @@
 <script setup>
 import { useRoute } from 'vue-router'
 import { useCoinsStore } from '../store/coinsStore'
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, computed } from 'vue'
 import { Line } from "vue-chartjs"
 import ChartService from "../service/chartService"
 import { Chart, registerables } from "chart.js"
-import { auth, db } from "../firebase/firebase";
-import { doc, setDoc, collection, getDocs, updateDoc, query, where, } from "firebase/firestore";
+import { auth, db } from "../firebase/firebase"
+import { doc, setDoc, collection, getDocs, updateDoc, query, where, getDoc, addDoc } from "firebase/firestore"
 
 Chart.register(...registerables)
 
@@ -17,32 +17,40 @@ const coin = useCoinsStore().coinDataTop50.find((coin) => coin.name === coinName
 const chartData = ref({})
 const selectedCoinData = ref("1MTH")
 
+const showBuyModal = ref(false)
+const showSellModal = ref(false)
+const mode = ref("buy") // 'buy' or 'sell'
+const tradeType = ref("amount") // 'amount' or 'usd'
+const inputValue = ref("")
+const calculatedValue = ref(0)
+const currentBalance = ref(0)
+const walletBalance = ref(0)
+const successMessage = ref("")
+const countdown = ref(10)
+const countdownActive = ref(false)
+const showCountdownModal = ref(false)
+
 const chartOptions = {
   responsive: true,
   interaction: { mode: "index", intersect: true },
   plugins: {
     tooltip: {
       enabled: true,
-      mode: "index",
-      intersect: true,
       callbacks: {
-        label: function (context) {
-          return `Price: $${context.parsed.y.toFixed(2)}`
-        },
-      },
-    },
+        label: context => `Price: $${context.parsed.y.toFixed(2)}`
+      }
+    }
   },
   scales: {
     x: { display: true },
-    y: { display: true },
-  },
+    y: { display: true }
+  }
 }
 
 const fetchChartData = async () => {
   try {
     const response = await ChartService.getChart(coin.id, selectedCoinData.value)
     const chartArray = response.data?.data
-
     if (chartArray && chartArray.length > 0) {
       const prices = chartArray.map((entry) => ({
         rawDate: new Date(entry.date),
@@ -52,10 +60,7 @@ const fetchChartData = async () => {
 
       prices.sort((a, b) => a.rawDate - b.rawDate)
       const horizontalThreshold = prices[0].price
-      const labels = prices.map((entry) => entry.date)
-
-      const aboveThreshold = prices.map(p => p.price > horizontalThreshold ? p.price : null)
-      const belowThreshold = prices.map(p => p.price <= horizontalThreshold ? p.price : null)
+      const labels = prices.map(e => e.date)
 
       chartData.value[coin.id] = {
         labels,
@@ -64,7 +69,7 @@ const fetchChartData = async () => {
             label: `${coin.symbol} (Above Threshold)`,
             backgroundColor: "rgba(30, 203, 79, 0.3)",
             borderColor: "#1ECB4F",
-            data: aboveThreshold,
+            data: prices.map(p => p.price > horizontalThreshold ? p.price : null),
             borderWidth: 2,
             pointRadius: 0,
             pointHoverRadius: 6,
@@ -74,7 +79,7 @@ const fetchChartData = async () => {
             label: `${coin.symbol} (Below Threshold)`,
             backgroundColor: "rgba(239, 68, 68, 0.3)",
             borderColor: "#EF4444",
-            data: belowThreshold,
+            data: prices.map(p => p.price <= horizontalThreshold ? p.price : null),
             borderWidth: 2,
             pointRadius: 0,
             pointHoverRadius: 6,
@@ -89,34 +94,94 @@ const fetchChartData = async () => {
             pointRadius: 0,
             fill: false,
           },
-        ],
+        ]
       }
-    } else {
-      console.error(`There is no chartArray data for ${coin.id}`)
     }
   } catch (error) {
-    console.error("Error fetching chart data for " + coin.id, error)
+    console.error("Chart error:", error)
   }
 }
 
 onMounted(() => {
-  if (coin && coin.id) {
-    fetchChartData()
-  } else {
-    console.warn("Coin not found")
-  }
+  if (coin && coin.id) fetchChartData()
 })
 
-const showBuyModal = ref(false)
-const showSellModal = ref(false)
-const buyMode = ref("amount")
-const inputValue = ref("")
-const calculatedValue = ref(0)
-const currentBalance = ref(0)
-const successMessage = ref("")
-const countdown = ref(10)
-const countdownActive = ref(false) 
-const showCountdownModal = ref(false)
+const fetchBalance = async () => {
+  const user = auth.currentUser
+  if (!user) return
+
+  const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
+  const q = query(coinRef, where("coinId", "==", coin.id))
+  const snapshot = await getDocs(q)
+
+  currentBalance.value = !snapshot.empty ? snapshot.docs[0].data().amountOwned : 0
+
+  const userSnap = await getDoc(doc(db, "users", user.uid))
+  walletBalance.value = userSnap.exists() ? userSnap.data().balance : 0
+}
+
+const updateWalletBalance = async (uid, delta) => {
+  const userRef = doc(db, "users", uid)
+  const userSnap = await getDoc(userRef)
+  if (userSnap.exists()) {
+    const newBalance = (userSnap.data().balance || 0) + delta
+    await updateDoc(userRef, { balance: newBalance })
+    walletBalance.value = newBalance
+  }
+}
+
+const addTransaction = async (uid, amount, description, type) => {
+  await addDoc(collection(db, "users", uid, "transactions"), {
+    amount,
+    description,
+    type,
+    timestamp: Date.now()
+  })
+}
+
+const openBuyModal = async () => {
+  mode.value = "buy"
+  tradeType.value = "amount"
+  inputValue.value = ""
+  calculatedValue.value = 0
+  showBuyModal.value = true
+  await fetchBalance()
+}
+
+const openSellModal = async () => {
+  mode.value = "sell"
+  tradeType.value = "amount"
+  inputValue.value = ""
+  calculatedValue.value = 0
+  showSellModal.value = true
+  await fetchBalance()
+}
+
+const closeModal = () => {
+  showBuyModal.value = false
+  showSellModal.value = false
+  inputValue.value = ""
+  calculatedValue.value = 0
+  tradeType.value = "amount"
+}
+
+const updateMaxBuyAmount = () => {
+  const price = parseFloat(coin.priceUsd)
+  if (tradeType.value === "amount") {
+    inputValue.value = walletBalance.value / price
+  } else if (tradeType.value === "usd") {
+    inputValue.value = walletBalance.value
+  }
+}
+
+const updateMaxSellAmount = () => {
+  const price = parseFloat(coin.priceUsd)
+  if (tradeType.value === "amount") {
+    inputValue.value = currentBalance.value
+  } else if (tradeType.value === "usd") {
+    inputValue.value = currentBalance.value * price
+  }
+}
 
 const startCountdown = () => {
   countdown.value = 10
@@ -133,148 +198,201 @@ const startCountdown = () => {
   }, 1000)
 }
 
-// Function to close the countdown modal manually
 const closeCountdownModal = () => {
   countdownActive.value = false
   showCountdownModal.value = false
   successMessage.value = ""
 }
 
-
-const openBuyModal = async () => {
-  showBuyModal.value = true
-  inputValue.value = ""
-  calculatedValue.value = 0
-  buyMode.value = "amount"
-  successMessage.value = ""
-  await fetchBalance()
-}
-
-const openSellModal = async () => {
-  showSellModal.value = true
-  inputValue.value = ""
-  calculatedValue.value = 0
-  successMessage.value = ""
-  await fetchBalance()
-}
-
-const fetchBalance = async () => {
-  const user = auth.currentUser
-  if (!user) return
-
-  const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
-  const q = query(coinRef, where("coinId", "==", coin.id))
-  const snapshot = await getDocs(q)
-
-  if (!snapshot.empty) {
-    const existingDoc = snapshot.docs[0]
-    const data = existingDoc.data()
-    currentBalance.value = data.amountOwned
-  }
-}
-
-const closeModal = () => {
-  showBuyModal.value = false
-  showSellModal.value = false
-}
-
-watch([inputValue, buyMode], () => {
+const isBuyDisabled = computed(() => {
   const input = parseFloat(inputValue.value)
   const price = parseFloat(coin.priceUsd)
-  if (!isNaN(input)) {
-    calculatedValue.value =
-      buyMode.value === "amount" ? input * price : input / price
-  } else {
+  if (isNaN(input) || input <= 0) return true
+  const usdRequired = tradeType.value === "amount" ? input * price : input
+  return usdRequired > walletBalance.value
+})
+
+const isSellDisabled = computed(() => {
+  const input = parseFloat(inputValue.value)
+  if (isNaN(input) || input <= 0) return true
+  let valueInUSD = 0
+  if (tradeType.value === "amount") {
+    valueInUSD = input * coin.priceUsd
+  } else if (tradeType.value === "usd") {
+    valueInUSD = input
+  }
+
+  return valueInUSD > (currentBalance.value * coin.priceUsd)
+})
+
+watch([inputValue, tradeType, mode], () => {
+  const input = parseFloat(inputValue.value)
+  const price = parseFloat(coin.priceUsd)
+  if (isNaN(input) || input <= 0) {
     calculatedValue.value = 0
+    return
+  }
+
+  if (tradeType.value === "amount") {
+    calculatedValue.value = input * price
+  } else {
+    calculatedValue.value = input / price
   }
 })
 
+const isProcessing = ref(false)
+
 const confirmBuy = async () => {
-  showBuyModal.value = false
+  if (isProcessing.value) return 
 
-  const user = auth.currentUser
-  const price = parseFloat(coin.priceUsd)
-  const input = parseFloat(inputValue.value)
+  isProcessing.value = true
+  try{
+    const user = auth.currentUser
+    const price = parseFloat(coin.priceUsd)
+    const input = parseFloat(inputValue.value)
 
-  if (!user || isNaN(input) || input <= 0) {
-    alert("Enter a valid value")
-    return
-  }
+    if (!user || isNaN(input) || input <= 0){
+      alert("Invalid input")
+      return 
+    }
+    const amountToBuy = tradeType.value === "amount" ? input : input / price
+    const valueUsd = amountToBuy * price
 
-  const amountToBuy = buyMode.value === "amount" ? input : input / price
-  const valueUsd = amountToBuy * price
-
-  const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
-  const q = query(coinRef, where("coinId", "==", coin.id))
-  const snapshot = await getDocs(q)
-
-  if (!snapshot.empty) {
-    const existingDoc = snapshot.docs[0]
-    const data = existingDoc.data()
-
-    const updatedAmount = data.amountOwned + amountToBuy
-    const updatedValue = updatedAmount * price
-
-    await updateDoc(doc(db, 'users', user.uid, 'cryptoCoins', existingDoc.id), {
-      amountOwned: updatedAmount,
-      valueUsd: updatedValue
-    })
-  } else {
-    const newDoc = doc(coinRef)
-    await setDoc(newDoc, {
-      coinId: coin.id,
-      coinName: coin.name,
-      symbol: coin.symbol,
-      amountOwned: amountToBuy,
-      valueUsd: valueUsd
-    })
-  }
-
-  successMessage.value = `You successfully bought ${amountToBuy.toFixed(8)} ${coin.symbol} for $${valueUsd.toFixed(2)}`
-  
-  startCountdown()
-}
-
-const confirmSell = async () => {
-  const user = auth.currentUser
-  const price = parseFloat(coin.priceUsd)
-  const input = parseFloat(inputValue.value)
-
-  if (!user || isNaN(input) || input <= 0) {
-    alert("Enter a valid value")
-    return
-  }
-
-  const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
-  const q = query(coinRef, where("coinId", "==", coin.id))
-  const snapshot = await getDocs(q)
-
-  if (!snapshot.empty) {
-    const existingDoc = snapshot.docs[0]
-    const data = existingDoc.data()
-
-    const updatedAmount = data.amountOwned - input
-    const updatedValue = updatedAmount * price
-
-    if (updatedAmount < 0) {
-      alert("You don't have enough balance to sell")
-      return
+    const userRef = doc(db, "users", user.uid)
+    const userSnap = await getDoc(userRef)
+    
+    if (!userSnap.exists()) {
+      alert("User not found.")
+      return 
     }
 
-    await updateDoc(doc(db, 'users', user.uid, 'cryptoCoins', existingDoc.id), {
-      amountOwned: updatedAmount,
-      valueUsd: updatedValue
-    })
+    const freshBalance = userSnap.exists() ? userSnap.data().balance : 0
 
-    successMessage.value = `You successfully sold ${input.toFixed(8)} ${coin.symbol} for $${(input * price).toFixed(2)}`
+    if (valueUsd > freshBalance) {
+      alert("You do not have enough funds. Try refreshing.")
+      return 
+    }
 
+    const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
+    const q = query(coinRef, where("coinId", "==", coin.id))
+    const snapshot = await getDocs(q)
+
+    if (!snapshot.empty) {
+      const docId = snapshot.docs[0].id
+      const data = snapshot.docs[0].data()
+      await updateDoc(doc(db, 'users', user.uid, 'cryptoCoins', docId), {
+        amountOwned: data.amountOwned + amountToBuy,
+        valueUsd: (data.amountOwned + amountToBuy) * price
+      })
+    } else {
+      await addDoc(coinRef, {
+        coinId: coin.id,
+        coinName: coin.name,
+        symbol: coin.symbol,
+        amountOwned: amountToBuy,
+        valueUsd: valueUsd
+      })
+    }
+
+    await updateWalletBalance(user.uid, -valueUsd)
+    await addTransaction(user.uid, -valueUsd, `Bought ${coin.name}`, "Buy")
+
+    await fetchBalance()
+
+    successMessage.value = `You successfully bought ${amountToBuy.toFixed(8)} ${coin.symbol} for $${valueUsd.toFixed(2)}`
     startCountdown()
 
-  } else {
-    alert("You don't own this coin")
-  }
+  } catch (error){
+      console.error("Error during purchase:", error)
+      alert("Something went wrong. Please try again.")
+    } 
+    finally{
+      isProcessing.value = false  
+    }
+}  
+
+const confirmSell = async () => {
+  if (isProcessing.value) return
+  
+  isProcessing.value = true
+  
+  try{
+    const user = auth.currentUser
+    const input = parseFloat(inputValue.value)
+    const price = parseFloat(coin.priceUsd)
+
+    if (!user || isNaN(input) || input <= 0){
+      alert("Invalid input")
+      return
+    } 
+    
+    let amountToSell = 0
+    let valueUsd = 0
+
+    if (tradeType.value === "amount") {
+      if (input > currentBalance.value){
+        alert("Insufficient holdings")
+        return
+      }
+      amountToSell = input
+      valueUsd = amountToSell * price
+    }
+
+    else if (tradeType.value === "usd") {
+      valueUsd = input
+
+      if (valueUsd > currentBalance.value * price){ 
+        alert("Insufficient funds to sell by USD")
+        return 
+      }
+      amountToSell = valueUsd / price
+    }
+
+    const coinRef = collection(db, 'users', user.uid, 'cryptoCoins')
+    const q = query(coinRef, where("coinId", "==", coin.id))
+    const snapshot = await getDocs(q)
+
+    if (!snapshot.empty) {
+      const docId = snapshot.docs[0].id
+      const data = snapshot.docs[0].data()
+
+      const freshAmountOwned = data.amountOwned
+      if (amountToSell > freshAmountOwned) {
+        alert("You do not have enough to sell. Try refreshing.")
+        return 
+      }
+      const updatedAmount = currentBalance.value - amountToSell
+      const updatedValue = updatedAmount * price
+      const usdEarned = valueUsd
+
+      await updateDoc(doc(db, 'users', user.uid, 'cryptoCoins', docId), {
+        amountOwned: updatedAmount,
+        valueUsd: updatedValue
+      })
+
+      await updateWalletBalance(user.uid, usdEarned)
+      await addTransaction(user.uid, usdEarned, `Sold ${coin.name}`, "Sell")
+
+      await fetchBalance();
+
+      successMessage.value = `You successfully sold ${amountToSell.toFixed(8)} ${coin.symbol} for $${usdEarned.toFixed(2)}`
+      startCountdown()
+    } else {
+      alert("You don't own this coin")
+      return 
+    }
+  } catch (error){
+      console.error("Error during sell:", error)
+      alert("Something went wrong. Please try again.")
+    } 
+    finally{
+      isProcessing.value = false
+    }
 }
+
 </script>
+
+
 
 <template>
   <div class="min-h-screen flex items-center justify-center">
@@ -311,22 +429,22 @@ const confirmSell = async () => {
             <div class="flex flex-col items-start">
               <h2 class="text-xl font-bold">Buy {{ coin.symbol }}</h2>
               <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ Number(coin.priceUsd).toFixed(2) }}</h3>
-              <p class="mt-2">Current Balance: {{ currentBalance }} {{ coin.symbol }}</p>
+              <p class="mt-2">Current Balance: ${{ walletBalance.toFixed(2) }}</p>
             </div>
             <button @click="closeModal" class="text-xl">&times;</button>
           </div>
 
           <div class="flex justify-center gap-4 mb-4">
             <button
-              @click="buyMode = 'amount'"
-              :class="buyMode === 'amount' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
+              @click="tradeType = 'amount'; inputValue = ''"
+              :class="tradeType === 'amount' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
               class="px-4 py-2 rounded-full font-bold w-1/2"
             >
               By Amount
             </button>
             <button
-              @click="buyMode = 'usd'"
-              :class="buyMode === 'usd' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
+              @click="tradeType = 'usd'; inputValue = ''"
+              :class="tradeType === 'usd' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
               class="px-4 py-2 rounded-full font-bold w-1/2"
             >
               By USD
@@ -342,18 +460,35 @@ const confirmSell = async () => {
             />
           </div>
 
+          <button
+            @click="updateMaxBuyAmount"
+            class="w-full bg-gray-700 text-white font-bold py-2 rounded-lg"
+          >
+            Max
+          </button>
+
           <div class="mb-6 text-center">
-            <p v-if="buyMode === 'amount'">
+            <p v-if="tradeType === 'amount'">
               You will pay: ${{ calculatedValue.toFixed(2) }}
             </p>
             <p v-else>
               You will receive: {{ calculatedValue.toFixed(6) }} {{ coin.symbol }}
             </p>
           </div>
+          <p v-if="tradeType==='amount' && calculatedValue > walletBalance" class="text-red-500 text-sm mb-2">
+            Insufficient amount in portfolio!
+          </p>
+          <p v-if="tradeType==='usd' && inputValue > walletBalance" class="text-red-500 text-sm mb-2">
+            Insufficient funds in wallet!
+          </p>
 
           <button
             @click="confirmBuy"
-            class="w-full bg-[#1ECB4F] hover:bg-green-600 text-white font-bold py-2 rounded-lg"
+            :disabled="isBuyDisabled"
+            :class="[
+              'w-full font-bold py-2 rounded-lg',
+              isBuyDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-[#1ECB4F] hover:bg-green-600 text-white'
+            ]"
           >
             Confirm Purchase
           </button>
@@ -367,9 +502,27 @@ const confirmSell = async () => {
             <div class="flex flex-col items-start">
               <h2 class="text-xl font-bold">Sell {{ coin.symbol }}</h2>
               <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ Number(coin.priceUsd).toFixed(2) }}</h3>
-              <p class="mt-2">Current Balance: {{ currentBalance }} {{ coin.symbol }}</p>
+              <p v-if="tradeType === 'amount'" class="mt-2">Amount Owned: {{ currentBalance }} {{ coin.symbol }}</p>
+              <p v-else class="mt-2">Current Balance: ${{ Number(currentBalance*coin.priceUsd).toFixed(2) }}</p>
             </div>
             <button @click="closeModal" class="text-xl">&times;</button>
+          </div>
+
+          <div class="flex justify-center gap-4 mb-4">
+            <button
+              @click="tradeType = 'amount'; inputValue = ''"
+              :class="tradeType === 'amount' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
+              class="px-4 py-2 rounded-full font-bold w-1/2"
+            >
+              By Amount
+            </button>
+            <button
+              @click="tradeType = 'usd'; inputValue = ''"
+              :class="tradeType === 'usd' ? 'bg-[#1ECB4F]' : 'bg-gray-700'"
+              class="px-4 py-2 rounded-full font-bold w-1/2"
+            >
+              By USD
+            </button>
           </div>
 
           <div class="mb-4">
@@ -382,21 +535,34 @@ const confirmSell = async () => {
           </div>
           
           <button
-            @click="inputValue = currentBalance"
+            @click="updateMaxSellAmount"
             class="w-full bg-gray-700 text-white font-bold py-2 rounded-lg"
           >
             ALL
           </button>
 
           <div class="mb-6 text-center">
-            <p>
+            <p v-if="tradeType === 'amount'">
               You will receive: ${{ (inputValue * coin.priceUsd).toFixed(2) }}
             </p>
+            <p v-else>
+              You will sell: {{ calculatedValue.toFixed(6) }} {{ coin.symbol }}
+            </p>
           </div>
+          <p v-if="tradeType === 'amount' && inputValue > currentBalance" class="text-red-500 text-sm mb-2">
+            Insufficient amount owned to sell!
+          </p>
+          <p v-if="tradeType === 'usd' && inputValue > currentBalance*coin.priceUsd" class="text-red-500 text-sm mb-2">
+            Insufficient amount owned in USD to sell!
+          </p>
 
           <button
             @click="confirmSell"
-            class="w-full bg-red-500 text-white font-bold py-2 rounded-lg"
+            :disabled="isSellDisabled"
+            :class="[
+              'w-full font-bold py-2 rounded-lg',
+              isSellDisabled ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 text-white'
+            ]"
           >
             Confirm Sell
           </button>
@@ -408,8 +574,7 @@ const confirmSell = async () => {
     <div class="bg-[#1B2028] rounded-2xl p-6 w-[400px] text-white text-center relative">
       <h2 class="text-xl font-bold mb-4">Transaction Successful!</h2>
       
-      <p class="text-lg mb-2">{{ successMessage }}</p> <!-- 🔥 Add this line -->
-
+      <p class="text-lg mb-2">{{ successMessage }}</p>
       <p class="text-sm text-gray-400">This popup will close in {{ countdown }} seconds.</p>
 
       <button @click="closeCountdownModal" class="mt-4 bg-red-500 text-white font-bold py-2 px-4 rounded-lg">
