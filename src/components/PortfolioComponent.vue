@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../firebase/firebase";
 import { collection, getDocs } from "firebase/firestore";
+import { useCoinsStore } from "../store/coinsStore";
 const isLoggedIn = ref(false);
 
 const isLoading = ref(true);
@@ -13,6 +14,14 @@ const userCoins = ref([])
 
 const totalCoinsValue = ref(0);
 
+const coinsStore = useCoinsStore();
+const coins = coinsStore.coinDataTop50;
+const filteredcoins = ref([]);
+
+const getPriceUsd = (symbol) => {
+  const match = filteredcoins.value.find(coin => coin.symbol === symbol);
+  return match ? Number(match.priceUsd).toFixed(2) : "N/A";
+};
 
 onMounted(() =>{
   onAuthStateChanged(auth, async (user) => {
@@ -26,10 +35,13 @@ onMounted(() =>{
         ...doc.data()
       }))
 
-      // console.log("User's coins: ", userCoins.value)
+      const userSymbols = userCoins.value.map(coin => coin.symbol);  
+      filteredcoins.value = coins.filter(coin =>userSymbols.includes(coin.symbol))
 
-      totalCoinsValue.value = userCoins.value.reduce((acc, coin) => acc + coin.valueUsd, 0);
-      // console.log("Total coins value: ", totalCoinsValue);
+
+      totalCoinsValue.value = userCoins.value.reduce((acc, coin) =>  {
+        return acc + coin.amountOwned * Number(getPriceUsd(coin.symbol))
+      }, 0);
       }
     else {
       isLoggedIn.value = false;
@@ -46,26 +58,26 @@ const handleInvest = (coinName) => {
   }
 };
 
+
+
+
 </script>
 <template>
   <div>
     <div class="text-white text-center mt-[20px] w-[600px] rounded-[10px] p-[20px] mx-[150px] font-bold text-2xl bg-[#1B2028] ">
-    <h1>YOU'R TOTAL BALANCE</h1>
-    <p>{{ totalCoinsValue.toFixed(4) }}</p>
-   <!-- <div >
-    <div class ="text-center w-[200px]">
-      {{ totalCoinsValue }}
-    </div>
-    <div class ="w-[200px]">
-      <select>
-        <option value="USD" key="USD">USD</option>
-      </select>
-    </div> 
-   </div>-->
+    <h1>YOUR TOTAL BALANCE</h1>
+    <p>{{ totalCoinsValue.toFixed(2) }}</p>
   </div>
-    <div v-for="coin in userCoins" class="text-white text-center mt-[20px] w-[600px] rounded-[10px] p-[20px] mx-[150px] flex justify-between border border-[#1B2028] bg-white">
-      <div class="w-[200px] text-[#1B2028] text-2xl"><p class="cursor-pointer"  @click="handleInvest(coin.coinName)">{{ coin.coinName }}</p></div>
-      <div class="w-[200px] text-[#1B2028] text-2xl"><p>${{ coin.valueUsd }}</p></div>
+    <div v-for="coin in userCoins" class="text-white text-center mt-[20px] w-[600px] rounded-[10px] p-[20px] mx-[150px] flex justify-between border bg-[#1B2028] transform hover:scale-105 transition">
+      <img :src="`/static/${(coin.symbol).toLowerCase()}.png`" alt="icon" class="w-16"/>
+      <div class="w-[200px] text-white text-2xl"><p class="cursor-pointer"  @click="handleInvest(coin.coinName)">{{ coin.coinName }}</p></div>
+      <div class="w-[200px] text-[white text-2xl">
+        <div ><p>${{ (coin.amountOwned *  getPriceUsd(coin.symbol)).toFixed(2) }}USD</p></div>
+        <div>
+          <p>{{ Number(coin.amountOwned).toFixed(4) }} {{ coin.symbol }}</p>
+        </div>
+      </div>
+      <p class="w-[200px]">1{{ coin.symbol }} = ${{ getPriceUsd(coin.symbol) }}</p>
     </div>
   </div>
 </template>
