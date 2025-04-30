@@ -38,7 +38,7 @@ const chartOptions = {
       intersect: true,
       callbacks: {
         label: function (context) {
-          return `Price: $${context.parsed.y.toFixed(4)}`;
+          return `Price: $${formatPrice(context.parsed.y)}`;
         },
       },
     },
@@ -94,6 +94,23 @@ onMounted(() => {
 
   fetchChartData();
 });
+
+function formatPrice(price) {
+  if (price >= 1.01) return price.toFixed(2)
+
+  const [_, decimals] = price.toString().split(".")
+  if (!decimals) return price.toFixed(2)
+
+  const firstNonZeroIndex = decimals.search(/[^0]/)
+
+  if (firstNonZeroIndex >= 4) {
+    return price.toFixed(8)
+  } else if (firstNonZeroIndex >= 2) {
+    return price.toFixed(4)
+  } else {
+    return price.toFixed(2)
+  }
+}
 </script>
 
 <template>

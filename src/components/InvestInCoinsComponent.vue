@@ -37,7 +37,7 @@ const chartOptions = {
     tooltip: {
       enabled: true,
       callbacks: {
-        label: context => `Price: $${context.parsed.y.toFixed(2)}`
+        label: context => `Price: $${formatPrice(context.parsed.y)}`
       }
     }
   },
@@ -389,6 +389,23 @@ const confirmSell = async () => {
       isProcessing.value = false
     }
 }
+function formatPrice(price) {
+  if (price >= 1.01) return price.toFixed(2)
+
+  const [_, decimals] = price.toString().split(".")
+  if (!decimals) return price.toFixed(2)
+
+  const firstNonZeroIndex = decimals.search(/[^0]/)
+
+  if (firstNonZeroIndex >= 4) {
+    return price.toFixed(8)
+  } else if (firstNonZeroIndex >= 2) {
+    return price.toFixed(4)
+  } else {
+    return price.toFixed(2)
+  }
+}
+
 
 </script>
 
@@ -399,7 +416,7 @@ const confirmSell = async () => {
     <div class="text-center">
       <h1 class="text-white font-bold text-3xl mb-4">Invest in {{ coinName }}</h1>
       <h1 class="text-white">{{ coin.symbol }}</h1>
-      <h2 class="text-white">${{ Number(coin.priceUsd).toFixed(2) }}</h2>
+      <h2 class="text-white">${{ formatPrice(Number(coin.priceUsd)) }}</h2>
       <p
         :class="coin.changePercent24Hr < 0 ? 'font-bold text-red-500' : 'font-bold text-[#1ECB4F]'"
       >
@@ -428,7 +445,7 @@ const confirmSell = async () => {
           <div class="flex justify-between items-start mb-4">
             <div class="flex flex-col items-start">
               <h2 class="text-xl font-bold">Buy {{ coin.symbol }}</h2>
-              <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ Number(coin.priceUsd).toFixed(2) }}</h3>
+              <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ formatPrice(Number(coin.priceUsd)) }}</h3>
               <p class="mt-2">Current Balance: ${{ walletBalance.toFixed(2) }}</p>
             </div>
             <button @click="closeModal" class="text-xl">&times;</button>
@@ -469,10 +486,10 @@ const confirmSell = async () => {
 
           <div class="mb-6 text-center">
             <p v-if="tradeType === 'amount'">
-              You will pay: ${{ calculatedValue.toFixed(2) }}
+              You will pay: ${{ formatPrice(calculatedValue) }}
             </p>
             <p v-else>
-              You will receive: {{ calculatedValue.toFixed(6) }} {{ coin.symbol }}
+              You will receive: {{ formatPrice(calculatedValue) }} {{ coin.symbol }}
             </p>
           </div>
           <p v-if="tradeType==='amount' && calculatedValue > walletBalance" class="text-red-500 text-sm mb-2">
@@ -501,9 +518,9 @@ const confirmSell = async () => {
           <div class="flex justify-between items-start mb-4">
             <div class="flex flex-col items-start">
               <h2 class="text-xl font-bold">Sell {{ coin.symbol }}</h2>
-              <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ Number(coin.priceUsd).toFixed(2) }}</h3>
-              <p v-if="tradeType === 'amount'" class="mt-2">Amount Owned: {{ currentBalance }} {{ coin.symbol }}</p>
-              <p v-else class="mt-2">Current Balance: ${{ Number(currentBalance*coin.priceUsd).toFixed(2) }}</p>
+              <h3 class="text-sm text-gray-300 mt-1">Current Price: ${{ formatPrice(Number(coin.priceUsd)) }}</h3>
+              <p v-if="tradeType === 'amount'" class="mt-2">Amount Owned: {{ formatPrice(currentBalance) }} {{ coin.symbol }}</p>
+              <p v-else class="mt-2">Current Balance: ${{ formatPrice(Number(currentBalance*coin.priceUsd)) }}</p>
             </div>
             <button @click="closeModal" class="text-xl">&times;</button>
           </div>
@@ -543,10 +560,10 @@ const confirmSell = async () => {
 
           <div class="mb-6 text-center">
             <p v-if="tradeType === 'amount'">
-              You will receive: ${{ (inputValue * coin.priceUsd).toFixed(2) }}
+              You will receive: ${{ formatPrice(inputValue * coin.priceUsd)}}
             </p>
             <p v-else>
-              You will sell: {{ calculatedValue.toFixed(6) }} {{ coin.symbol }}
+              You will sell: {{ formatPrice(calculatedValue) }} {{ coin.symbol }}
             </p>
           </div>
           <p v-if="tradeType === 'amount' && inputValue > currentBalance" class="text-red-500 text-sm mb-2">
