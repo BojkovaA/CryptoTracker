@@ -1,5 +1,12 @@
-# Vue 3 + Vite
+# CryptoTracker
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+## Contributors
+- Angela Bojkova, 216048
+- Aleksandar Trkaleski, 216126
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Project Overview
+CryptoTracker is a Vue.js and Firebase-based web application that allows users to track real-time cryptocurrency prices, simulate buying and selling, and manage a personalized portfolio with authentication and historical price charts.
+
+## Documentation
+Full project report and technical documentation are available in the GitHub Wiki:  
+📄 https://github.com/BojkovaA/CryptoTracker/wiki
