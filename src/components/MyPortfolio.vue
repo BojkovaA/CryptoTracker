@@ -13,7 +13,9 @@ const isLoggedIn = ref(false);
 const isLoading = ref(true);
 const router = useRouter();
 
-const coindData = useCoinsStore()
+const coinsStore = useCoinsStore();
+const coins = coinsStore.coinDataTop50;
+const filteredcoins = ref([]);
 
 const userCoins = ref([])
 
@@ -29,6 +31,9 @@ onMounted(() =>{
         ...doc.data()
       }))
 
+      const userSymbols = userCoins.value.map(coin => coin.symbol);  
+      filteredcoins.value = coins.filter(coin => userSymbols.includes(coin.symbol));
+
       console.log("User's coins: ", userCoins.value)
       }
     else {
@@ -37,6 +42,11 @@ onMounted(() =>{
     isLoading.value = false;
   })
 })
+
+const getPriceUsd = (symbol) => {
+  const match = filteredcoins.value.find(coin => coin.symbol === symbol);
+  return match ? Number(match.priceUsd) : 0;
+};
 
 const scrollToSearch = () => {
   const input = document.getElementById('myInput');
@@ -56,6 +66,15 @@ const scrollToSearch = () => {
     });
   }
 };
+
+const handleInvest = (coinName) => {
+  if (isLoggedIn.value) {
+    router.push({ path: `/invest/${coinName}` });
+  } else {
+    router.push("/register");
+  }
+};
+
 
 </script>
 
@@ -78,16 +97,16 @@ const scrollToSearch = () => {
       <div v-if="userCoins.length === 0" class="text-center mt-[210px]">
         <p class="text-lg font-semibold text-white">Invest in Coins <a @click="scrollToSearch" class="text-lg font-semibold text-logoBlue underline hover:text-logoBlue transition">now</a>!</p>
       </div>
-
+      
       <div v-else class="max-h-[636px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
-        <div v-for="coin in userCoins" :key="coin.id" class="flex gap-[10px] pt-[20px] text-white hover:bg-gray-700 rounded-lg transition-all">
+        <div v-for="coin in userCoins" :key="coin.id" @click="handleInvest(coin.coinName)" class="flex gap-[10px] pt-[20px] text-white hover:bg-gray-700 rounded-lg transition-all cursor-pointer">
           <div>
             <img :src="`/static/${coin.symbol.toLowerCase()}.png`" class="w-12"/>
           </div>
           <div class="flex gap-[80px]">
             <div class="w-[75px]">
               <h1>{{ coin.coinName }}</h1>
-              <h3 class="text-[#454151]">${{ Number(coin.valueUsd).toFixed(3) }}</h3>
+              <h3 class="text-[#454151]">${{ (coin.amountOwned * getPriceUsd(coin.symbol)).toFixed(2) }}</h3>
             </div>
             <h3>{{Number(coin.amountOwned).toFixed(4)}} {{ coin.symbol }}</h3>
           </div>
