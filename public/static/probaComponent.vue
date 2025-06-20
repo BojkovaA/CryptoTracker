@@ -1,4 +1,4 @@
-<script setup>
+<!-- <script setup>
 import 'vue3-carousel/carousel.css';
 import { ref, onMounted } from "vue";
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel';
@@ -76,4 +76,4 @@ onMounted(fetchAllCoinsData);
       <Pagination />
     </template>
   </Carousel>
-</template>
+</template> -->

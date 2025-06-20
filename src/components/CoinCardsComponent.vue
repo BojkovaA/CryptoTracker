@@ -52,7 +52,7 @@ const handleInvest = (coinName) => {
 <template>
 <Carousel v-bind="config" :loop="true" :navigation="true" :pagination="true">
     <Slide v-for="coin in coinStore.coinDataTop50" :key="coin">
-      <div class="bg-[#1B2028] w-[300px] rounded-[10px] p-[20px] transition-transform duration-300 hover:-translate-y-2 hover:shadow-lg group">
+      <div class="bg-[#1B2028] w-[350px] h-[310px] rounded-[10px] p-[20px] transition-transform duration-300 hover:-translate-y-2 hover:shadow-lg group">
         <div class="flex gap-[10px] items-center mb-[10px]">
           <img :src="`/static/${coin.symbol.toLowerCase()}.png`" alt="icon" class="w-12" />
           <div>

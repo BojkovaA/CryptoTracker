@@ -117,7 +117,7 @@ onMounted(() => {
           Continue
         </button>
       </form>
-      <p class="text-textWhite text-center mt-4">Already has an account? <router-link to="/login" class="text-logoBlue hover:underline">Sign in</router-link></p>
+      <p class="text-textWhite text-center mt-4">Already have an account? <router-link to="/login" class="text-logoBlue hover:underline">Sign in</router-link></p>
       <form v-if="step === 2" @submit.prevent="register" class="space-y-4">
         <div>
           <label class="text-textWhite block mb-1">Full Name</label>
